@@ -1,0 +1,119 @@
+---
+title: "Reading and Manipulating Activity Data"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Reading and Manipulating Activity Data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+bibliography: refs.bib
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = ""
+)
+```
+
+```{r setup}
+library(actibase)
+library(actiread)
+```
+
+# Overview
+
+`actibase` is the foundation layer for actigraphy and activity data.
+It focuses on raw file reading, standardization, calibration, resampling,
+activity counts, non-wear detection, and transformation bookkeeping.
+
+Higher-level summarization, step-count mapping, and downstream statistical
+analysis are meant to live in overlay packages that build on top of this
+core package.
+
+# Reading data
+
+The package ships with a small GT3X file and a small CWA file under
+`inst/extdata`. We will use those examples here.
+
+```{r}
+gt3x_file = acti_example_gt3x()
+cwa_file = acti_example_cwa()
+
+gt3x = acti_read_gt3x(gt3x_file, verbose = FALSE)
+cwa = acti_read_cwa(cwa_file, verbose = FALSE)
+
+class(gt3x)
+names(gt3x)
+class(cwa)
+names(cwa)
+```
+
+The GT3X reader uses `read.gt3x::read.gt3x()` underneath, while the CWA
+reader uses `GGIRread::readAxivity()`.
+
+If you need to inspect the GT3X metadata separately, `acti_info_gt3x()`
+parses the header information without returning the full data stream.
+
+```{r}
+info = acti_info_gt3x(gt3x_file)
+names(info)
+```
+
+The readers also let you control timezone handling explicitly. Setting
+`apply_tz = FALSE` keeps the timestamps as stored in the file, and `tz = NULL`
+disables the final timezone forcing step.
+
+```{r}
+gt3x_no_tz = acti_read_gt3x(
+  gt3x_file,
+  tz = NULL,
+  apply_tz = FALSE,
+  verbose = FALSE,
+  fill_zeroes = FALSE
+)
+
+cwa_no_tz = acti_read_cwa(
+  cwa_file,
+  tz = NULL,
+  apply_tz = FALSE,
+  verbose = FALSE
+)
+
+get_transformations(gt3x_no_tz)
+get_transformations(cwa_no_tz)
+```
+
+Internally, Axivity files use fixed UTC offsets. The helper that maps those
+offsets to Olson timezone names is small but useful when you need to reason
+about the conversion logic:
+
+```{r}
+tzoffset_to_tz(c("+00:00", "-05:00", "+01:00"))
+```
+
+# Standardizing 
+
+The baseline package keeps the data in a consistent shape:
+
+```{r}
+std = acti_standardize_data(gt3x)
+
+head(std)
+```
+
+
+# Resampling
+
+You can resample a three-axis signal to a new sampling rate or to specific
+timestamps:
+
+```{r}
+resampled = acti_resample(std, sample_rate = 30L)
+get_transformations(resampled)
+
+same_times = acti_resample_to_time(
+  std,
+  times = lubridate::floor_date(std$time, unit = "1 second")
+)
+get_transformations(same_times)
+```
