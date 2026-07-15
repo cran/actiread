@@ -1,10 +1,11 @@
-b07b298093f1e48b45dcb25728aeafe8 *DESCRIPTION
+dfe3cfc70eb28c8d95408cc87b732549 *DESCRIPTION
 a8d542b68804c58ab38cc0bfed92527b *NAMESPACE
-197622574c96ab13e5c1b834ed20560e *NEWS.md
+6774465d57fe833dc4916890c8cd7134 *NEWS.md
 3b938042555ca4fe10879d57095e3b93 *R/aaa_utils.R
 ed6846c0ff49e5e53594ab67e6a5c564 *R/acti_example_data.R
-9c59a8381eb35288f3460b5aca8c372b *R/acti_read_cwa.R
-8a2d77833ac2eb7ec48ab1055a45c1a1 *R/acti_read_gt3x.R
+a9bb9250e8e55548178fc6092d83d0de *R/acti_process_header.R
+f5c84fb20e306d42c7fa4727af8f4071 *R/acti_read_cwa.R
+9c7bb254e5471acceaa9d0bedfb7288c *R/acti_read_gt3x.R
 7fff028c626caec9c5d3d918827a9e87 *R/acti_read_sensorlog.R
 af67ee6fea388eccce671f336a306daf *R/acti_read_sensorlogger_location.R
 973207a5055f549baefeb49b8977dea8 *R/acti_read_sensorlogger_zzz.R
