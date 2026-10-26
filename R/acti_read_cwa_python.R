@@ -8,7 +8,7 @@
 #' <doi:10.1152/japplphysiol.00421.2014>
 #' @param detect_nonwear Flag nonwear episodes in the data by setting them to
 #' `NA`. Non-wear episodes are inferred from long periods of no movement.
-#' 90 minute munte windows based on 10-second rolling windows with a
+#' 90 minute windows based on 10-second rolling windows with a
 #' threshold of 0.015g standard deviation tolerance
 #' @param resample_hz Target frequency (Hz) to resample the signal. If
 #' `"uniform"`, uses the device's sample rate to fix sampling errors. Pass
@@ -44,6 +44,7 @@ acti_py_read_cwa = function(path,
   stopifnot(requireNamespace("reticulate", quietly = TRUE))
   stopifnot(requireNamespace("arrow", quietly = TRUE))
 
+  check_file_exists(path)
   file = acti_decompress_file(path, extension = ".cwa")
   if (file$temporary) {
     on.exit(unlink(file$path), add = TRUE)
@@ -66,10 +67,11 @@ acti_py_read_cwa = function(path,
 
   # this is why we need pyarrow
   tfile = tempfile(fileext = ".feather")
+  on.exit(unlink(tfile), add = TRUE)
   data$to_feather(tfile)
   rm(data); gc()
   data = arrow::read_feather(tfile)
-  file.remove(tfile)
+  unlink(tfile)
 
   data = actibase::set_transformations(data,
                                        "acti_py_read_cwa:data_read_via_actipy_read_device",

@@ -11,6 +11,7 @@ acti_read_gt3x(
   imputeZeroes = TRUE,
   verbose = TRUE,
   ...,
+  digits = 3L,
   fill_zeroes = TRUE,
   apply_tz = FALSE,
   check_attributes = TRUE,
@@ -26,12 +27,22 @@ acti_info_gt3x(path, ...)
 \code{as.data.frame.activity}}
 
 \item{imputeZeroes}{Impute zeros in case there are missingness?
-Default is \code{FALSE}, in which case
-the time series will be incomplete in case there is missingness.}
+Default is \code{TRUE}.  If \code{FALSE}, the time series will be incomplete in case
+there is missingness.}
 
 \item{verbose}{print diagnostic messages, higher values = more verbosity.}
 
 \item{...}{additional arguments to pass to \code{\link[read.gt3x:read.gt3x]{read.gt3x::read.gt3x()}}}
+
+\item{digits}{number of digits to round the acceleration values to, passed
+to \code{\link[read.gt3x:read.gt3x]{read.gt3x::read.gt3x()}} (requires \verb{read.gt3x >= 1.3.0}).  The default
+\code{3L} matches both \code{\link[read.gt3x:read.gt3x]{read.gt3x::read.gt3x()}} and ActiLife, so the data
+agree with ActiLife exports.  Set to \code{NULL} to use the
+\code{\link[read.gt3x:read.gt3x]{read.gt3x::read.gt3x()}} default.  If you will resample the data (e.g. to
+30 Hz for activity counts), read with \code{digits} of at least \code{6L} (e.g.
+\code{8L}), resample, and then round to 3 digits: rounding to 3 before
+resampling loses precision, and rounding values already rounded to 5
+digits rounds twice (e.g. \code{0.1234996} to \code{0.12350} to \code{0.124}).}
 
 \item{fill_zeroes}{Rows with all zeros will be filled in with the last
 observation carried forward as is done with ActiLife.  Recommended}
@@ -42,11 +53,13 @@ if available}
 \item{check_attributes}{Check that the attributes are included This is a sanity check,
 including checking that \code{sample_rate} is in the attributes.}
 
-\item{tz}{timezone to project the data into.  The data read in via
-\code{\link[read.gt3x:read.gt3x]{read.gt3x::read.gt3x()}} says the timezone is GMT, but the time values is in the
-native timezone.  So this data is projected into the correct time zone and then
-forced into the timezone given by \code{tz}.  Set to \code{NULL} to not apply this
-forcing.}
+\item{tz}{timezone to display the data in when \code{apply_tz = TRUE}.  The
+data read in via \code{\link[read.gt3x:read.gt3x]{read.gt3x::read.gt3x()}} says the timezone is GMT, but the
+time values are the device's local clock time.  When \code{apply_tz = TRUE}, the
+header \code{TimeZone} offset is used to recover the true time, which is then
+shown in \code{tz} (the default \code{"GMT"} gives UTC times).  Set to \code{NULL} to keep
+the fixed-offset zone from the header (e.g. \code{"Etc/GMT+4"} for \code{-04:00}), or
+UTC if the offset is not a whole number of hours.}
 }
 \value{
 A \code{data.frame}

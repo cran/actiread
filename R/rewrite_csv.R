@@ -1,6 +1,6 @@
 #' Rewrite a CSV that may have issues with export from SensorLog
 #'
-#' @param file Input CSV file
+#' @param path Input CSV file
 #' @param outfile Output CSV file
 #' @param verbose Print Diagnostic messages
 #'
@@ -12,18 +12,19 @@
 #' files = utils::unzip(sl_file, exdir = tfile)
 #' result = actiread::acti_rewrite_sensorlog_csv(files)
 acti_rewrite_sensorlog_csv = function(
-    file,
+    path,
     outfile = tempfile(fileext = ".csv"),
-    verbose = FALSE
+    verbose = TRUE
 ) {
   if (verbose) {
     message(
       paste0("File being processed:\n",
-             file)
+             path)
     )
   }
+  check_file_exists(path)
   # read the files in
-  txt = readLines(file)
+  txt = readLines(path)
   cn = strsplit(txt[1], ",")[[1]]
   ind = which(cn ==  "pedometerFloorDescended(N)")
   ind2 = which(cn ==  "pedometerEndDate(txt)")
@@ -43,22 +44,30 @@ acti_rewrite_sensorlog_csv = function(
                 bat_ind_z == (length(cn) - 1) )
   }
 
-  # split the data in ,
-  ss = strsplit(txt, ",")
+  # split the data in , - only lines with quotes need the slower split that
+  # ignores commas inside quoted fields
+  ss = strsplit(txt, ",", fixed = TRUE)
+  has_quote = grepl('"', txt, fixed = TRUE)
+  if (any(has_quote)) {
+    ss[has_quote] = strsplit(txt[has_quote],
+                             ',(?=(?:[^"]*"[^"]*")*[^"]*$)', perl = TRUE)
+  }
 
-  # find elements with "null" as they cause issues
-  add_empty = sapply(ss, function(x) tolower(x)[ind] == "null")
   l = sapply(ss, length)
   max_length = max(l)
   # stopifnot(max(max_length - l) <= 1)
   ss = lapply(ss, function(x) {
-    if (tolower(x)[ind] == "null" &&
+    # elements with "null" cause a shift in the pedometer columns
+    if (length(ind) > 0 &&
+        isTRUE(tolower(x)[ind] == "null") &&
         length(x) %in% c(max_length - 1, max_length - 2)) {
-      x = c(x[1:ind], "", x[(ind+1):length(x)])
+      x = append(x, "", after = ind)
     }
-    if (tolower(x)[bat_ind] == "" &&
+    # an empty battery timestamp drops the battery level field
+    if (length(bat_ind) > 0 &&
+        isTRUE(tolower(x)[bat_ind] == "") &&
         length(x) == max_length - 1) {
-      x = c(x[1:bat_ind_r], "")
+      x = append(x, "", after = bat_ind_r)
     }
     x
   })

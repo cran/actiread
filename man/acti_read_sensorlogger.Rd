@@ -13,14 +13,14 @@ acti_sensorlogger_location_colnames_mapping()
 
 acti_sensorlogger_location_spec()
 
-acti_read_sensorlogger_location(file, ...)
+acti_read_sensorlogger_location(path, ...)
 
-acti_read_sensorlogger(file, verbose = FALSE, ...)
+acti_read_sensorlogger(path, verbose = TRUE, ...)
 
-acti_read_sensorlogger_general(file, ..., verbose = FALSE)
+acti_read_sensorlogger_general(path, ..., verbose = TRUE)
 }
 \arguments{
-\item{file}{A character vector of SensorLogger files, usually from unzipping
+\item{path}{A character vector of SensorLogger files, usually from unzipping
 the file, or a zip file of SensorLogger files}
 
 \item{...}{additional arguments to pass to \code{\link[readr:read_csv]{readr::read_csv()}}.
@@ -31,7 +31,9 @@ unless otherwise overridden}
 higher values are higher levels of verbosity.}
 }
 \value{
-A \code{data.frame} of data
+A \code{data.frame} of data if a single CSV file is given, otherwise a
+named list of \code{data.frame}s, one per sensor file (always a list for zip
+files)
 }
 \description{
 Read SensorLogger Data

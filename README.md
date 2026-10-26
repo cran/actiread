@@ -4,6 +4,8 @@
 [![R-CMD-check](https://github.com/jhuwit/actiread/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/jhuwit/actiread/actions/workflows/R-CMD-check.yaml)
 [![Codecov test
 coverage](https://app.codecov.io/gh/jhuwit/actiread/branch/main/graph/badge.svg)](https://app.codecov.io/gh/jhuwit/actiread?branch=main)
+[![CRAN
+status](https://www.r-pkg.org/badges/version/actiread)](https://CRAN.R-project.org/package=actiread)
 <!-- badges: end -->
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -17,6 +19,7 @@ It currently focuses on:
 
 - reading `gt3x` files
 - reading `cwa` files
+- reading GENEActiv, Genea, and Parmay Tech Matrix `.bin` files
 - Reading [SensorLog](https://sensorlog.berndthomas.net/) files
 - Reading [SensorLogger](https://www.tszheichoi.com/sensorlogger) files
 - loading small example files bundled with the package
@@ -88,6 +91,11 @@ tzoffset_to_tz(c("+00:00", "-05:00", "+01:00"))
 
 - read `.gt3x`/`.gt3x.gz` files with `acti_read_gt3x()`
 - read `.cwa`/`.cwa.gz` files with `acti_read_cwa()`
+- read GENEActiv, Genea, and Matrix `.bin` files with
+  `acti_read_geneactiv()`, `acti_read_genea()`, and
+  `acti_read_parmay_matrix()`
+- let `acti_read()` pick the reader, inspecting `.bin` files to identify
+  the device
 - inspect GT3X metadata with `acti_info_gt3x()`
 - use bundled sample files with `acti_example_gt3x()` and
   `acti_example_cwa()`
