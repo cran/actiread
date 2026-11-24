@@ -1,7 +1,7 @@
 Type: Package
 Package: actiread
 Title: Baseline Package for Reading Actigraphy and Activity Data
-Version: 0.9.0
+Version: 0.10.0
 Authors@R: c(
     person(given = "John",
            family = "Muschelli",
@@ -22,18 +22,17 @@ Suggests: testthat (>= 3.0.0), covr, knitr, rmarkdown, reticulate,
         arrow
 Encoding: UTF-8
 VignetteBuilder: knitr
-Imports: actibase, GGIRread, read.gt3x (>= 0.2.0), R.utils, magrittr,
-        dplyr, lubridate, assertthat, cli, tibble, janitor, purrr,
-        readr, tools, utils
+Imports: actibase (>= 0.9.0), GGIRread, read.gt3x (>= 0.2.0), R.utils,
+        dplyr, lubridate, assertthat, cli, tibble, readr, tools, utils
 URL: https://github.com/jhuwit/actiread,
         https://jhuwit.github.io/actiread/
 BugReports: https://github.com/jhuwit/actiread/issues
 Config/roxygen2/version: 8.1.1
 Config/testthat/edition: 3
 NeedsCompilation: no
-Packaged: 2026-10-26 14:42:12 UTC; johnmuschelli
+Packaged: 2026-11-24 21:33:29 UTC; johnmuschelli
 Author: John Muschelli [aut, cre] (ORCID:
     <https://orcid.org/0000-0001-6469-1750>)
 Maintainer: John Muschelli <muschellij2@gmail.com>
 Repository: CRAN
-Date/Publication: 2026-10-26 16:20:02 UTC
+Date/Publication: 2026-11-24 22:40:08 UTC

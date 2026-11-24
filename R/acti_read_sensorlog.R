@@ -53,8 +53,8 @@ acti_read_sensorlog = function(
   if (robust) {
     path = sapply(path, acti_rewrite_sensorlog_csv, verbose = verbose > 1)
   }
-  data =
-    purrr::map_df(names(path), function(nx) {
+  data_list =
+    lapply(names(path), function(nx) {
       x = path[[nx]]
       r = read_csv_safe(x, progress = FALSE, col_types = spec)
       # r = readr::read_csv(x, col_types = spec)
@@ -77,32 +77,33 @@ acti_read_sensorlog = function(
       r = r[, cn]
       colnames(r) = names(cn)
 
-      # r = r %>%
+      # r = r |>
       #   dplyr::mutate(
       #     lat = ifelse(abs(lat) < 0.00001, NA_real_, lat),
       #     lon = ifelse(abs(lon) < 0.00001, NA_real_, lon)
       #   )
 
       # should add lat_zero in there
-      r = r %>%
+      r = r |>
         dplyr::mutate(
           lat_zero = abs(lat) < 0.00001,
           lon_zero = abs(lon) < 0.00001
         )
-      r = r %>%
+      r = r |>
         dplyr::mutate(
           lat = ifelse(lat_zero, NA_real_, lat),
           lon = ifelse(lon_zero, NA_real_, lon)
         )
-      r = r %>%
+      r = r |>
         dplyr::mutate(
           file = nx
         )
 
       r
-    }, .progress = verbose > 0)
+    })
+  data = dplyr::bind_rows(data_list)
   if (nrow(data) > 0) {
-    data = data %>%
+    data = data |>
       dplyr::select(file, dplyr::everything())
   }
   data

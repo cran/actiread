@@ -321,13 +321,17 @@ acti_cwa_process_time = function(
     header = acti_process_header(data)
   }
 
-  data = data %>%
+  data = data |>
     dplyr::as_tibble()
   attr(data, "header") = header
   attr(data, "sample_rate") = header$sample_rate
 
   data = actibase::set_transformations(data, transforms, add = FALSE)
 
+  is_unsorted = is.unsorted(data$time, na.rm = TRUE)
+  if (is_unsorted) {
+    warning("Times in cwa data are not sorted - please check.")
+  }
   data = acti_cwa_apply_tz(data,
                            tz = tz,
                            apply_tz = apply_tz,
@@ -343,5 +347,7 @@ acti_cwa_process_time = function(
   data = tibble::as_tibble(data)
   attr(data, "header") = header
   attr(data, "sample_rate") = header$sample_rate
+  attr(data, "missing_time") = any_na_time
+  attr(data, "unsorted_time") = is_unsorted
   data
 }

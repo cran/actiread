@@ -36,18 +36,18 @@ testthat::test_that("example data helpers return package files", {
 })
 
 testthat::test_that("tzoffset_to_tz handles supported offsets", {
-  testthat::expect_equal(actiread:::tzoffset_to_tz("+00:00"), "Etc/GMT0")
+  testthat::expect_equal(actiread::tzoffset_to_tz("+00:00"), "Etc/GMT0")
   # Etc/GMT zones use the inverted sign convention
-  testthat::expect_equal(actiread:::tzoffset_to_tz("-05:00"), "Etc/GMT+5")
-  testthat::expect_equal(actiread:::tzoffset_to_tz("+01:00"), "Etc/GMT-1")
-  testthat::expect_equal(actiread:::tzoffset_to_tz("-04:00:00"), "Etc/GMT+4")
-  testthat::expect_equal(actiread:::tzoffset_to_tz("+13:00"), "Etc/GMT-13")
-  testthat::expect_error(actiread:::tzoffset_to_tz("+05:30"), "whole hours")
-  testthat::expect_error(actiread:::tzoffset_to_tz("EST"), "must look like")
+  testthat::expect_equal(actiread::tzoffset_to_tz("-05:00"), "Etc/GMT+5")
+  testthat::expect_equal(actiread::tzoffset_to_tz("+01:00"), "Etc/GMT-1")
+  testthat::expect_equal(actiread::tzoffset_to_tz("-04:00:00"), "Etc/GMT+4")
+  testthat::expect_equal(actiread::tzoffset_to_tz("+13:00"), "Etc/GMT-13")
+  testthat::expect_error(actiread::tzoffset_to_tz("+05:30"), "whole hours")
+  testthat::expect_error(actiread::tzoffset_to_tz("EST"), "must look like")
   # the zone is the correct number of hours from UTC
   x = as.POSIXct("2020-01-01 12:00:00", tz = "UTC")
   testthat::expect_equal(
-    format(x, tz = actiread:::tzoffset_to_tz("-05:00")), "2020-01-01 07:00:00")
+    format(x, tz = actiread::tzoffset_to_tz("-05:00")), "2020-01-01 07:00:00")
   testthat::expect_equal(
     actiread:::tzoffset_to_seconds(c("+05:30", "-04:00:00", "+00:00")),
     c(19800, -14400, 0))
@@ -640,4 +640,110 @@ testthat::test_that("GT3X defaults to 3 digits and digits = NULL uses read.gt3x"
     actiread::acti_read_gt3x(actiread::acti_example_gt3x(), digits = -1),
     "digits"
   )
+})
+
+testthat::test_that("GT3X helper warns on unsorted times", {
+  header = list(frequency = 100L)
+  unsorted = data.frame(
+    time = as.POSIXct(c("2020-01-01 00:00:01", "2020-01-01 00:00:00",
+                        "2020-01-01 00:00:02"), tz = "GMT"),
+    X = 1:3, Y = 1:3, Z = 1:3)
+  testthat::expect_warning(
+    res <- actiread:::acti_gt3x_process_time(
+      list(header = header, data = unsorted), apply_tz = FALSE,
+      verbose = FALSE),
+    "not sorted"
+  )
+  # data are returned as-is, not reordered
+  testthat::expect_equal(res$time, unsorted$time)
+
+  sorted = unsorted[order(unsorted$time), ]
+  testthat::expect_no_warning(
+    actiread:::acti_gt3x_process_time(
+      list(header = header, data = sorted), apply_tz = FALSE,
+      verbose = FALSE)
+  )
+
+  # NAs alone do not trigger the unsorted warning, but unsorted values do
+  sorted_na = sorted
+  sorted_na$time[2] = NA
+  warns = testthat::capture_warnings(
+    actiread:::acti_gt3x_process_time(
+      list(header = header, data = sorted_na), apply_tz = FALSE,
+      verbose = FALSE))
+  testthat::expect_false(any(grepl("not sorted", warns)))
+
+  unsorted_na = unsorted
+  unsorted_na$time[3] = NA
+  warns = testthat::capture_warnings(
+    actiread:::acti_gt3x_process_time(
+      list(header = header, data = unsorted_na), apply_tz = FALSE,
+      verbose = FALSE))
+  testthat::expect_true(any(grepl("not sorted", warns)))
+})
+
+testthat::test_that("CWA helper warns on unsorted times", {
+  header = list(frequency = 100L,
+                start = as.POSIXct("2020-01-01", tz = "UTC"))
+  start = as.numeric(header$start)
+  unsorted = data.frame(time = start + c(0, 2, 1), x = 1:3, y = 1:3, z = 1:3)
+  testthat::expect_warning(
+    res <- actiread:::acti_cwa_process_time(
+      list(header = header, data = unsorted), apply_tz = TRUE,
+      verbose = FALSE),
+    "not sorted"
+  )
+  # data are returned as-is, not reordered
+  testthat::expect_equal(as.numeric(res$time), unsorted$time)
+
+  sorted = data.frame(time = start + 0:2, x = 1:3, y = 1:3, z = 1:3)
+  testthat::expect_no_warning(
+    actiread:::acti_cwa_process_time(
+      list(header = header, data = sorted), apply_tz = TRUE,
+      verbose = FALSE)
+  )
+
+  # NAs alone do not trigger the unsorted warning, but unsorted values do
+  sorted_na = sorted
+  sorted_na$time[2] = NA
+  warns = testthat::capture_warnings(
+    actiread:::acti_cwa_process_time(
+      list(header = header, data = sorted_na), apply_tz = FALSE,
+      verbose = FALSE))
+  testthat::expect_false(any(grepl("not sorted", warns)))
+
+  unsorted_na = data.frame(time = start + c(0, 2, NA, 1), x = 1:4, y = 1:4,
+                           z = 1:4)
+  warns = testthat::capture_warnings(
+    actiread:::acti_cwa_process_time(
+      list(header = header, data = unsorted_na), apply_tz = FALSE,
+      verbose = FALSE))
+  testthat::expect_true(any(grepl("not sorted", warns)))
+})
+
+testthat::test_that("shipped gt3x example has sorted times", {
+  read_example = function() {
+    actiread::acti_read_gt3x(actiread::acti_example_gt3x(),
+                             verbose = FALSE, fill_zeroes = FALSE)
+  }
+  if (utils::packageVersion("read.gt3x") > package_version("1.3.0")) {
+    testthat::expect_no_warning(gt3x <- read_example())
+  } else {
+    # read.gt3x <= 1.3.0 emits an unrelated "object length is not a multiple
+    # of subscript length" warning in get_features() on R >= 4.6 (fixed
+    # upstream in THLfi/read.gt3x#56), so only check for our own warning
+    warns = testthat::capture_warnings(gt3x <- read_example())
+    testthat::expect_false(any(grepl("not sorted", warns)))
+  }
+  testthat::expect_false(is.unsorted(gt3x$time, na.rm = TRUE))
+  testthat::expect_false(attr(gt3x, "unsorted_time"))
+})
+
+testthat::test_that("shipped cwa example has sorted times", {
+  testthat::expect_no_warning(
+    cwa <- actiread::acti_read_cwa(actiread::acti_example_cwa(),
+                                   verbose = FALSE)
+  )
+  testthat::expect_false(is.unsorted(cwa$time, na.rm = TRUE))
+  testthat::expect_false(attr(cwa, "unsorted_time"))
 })
